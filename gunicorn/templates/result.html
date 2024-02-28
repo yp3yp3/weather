@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>{{ title }}</head>
+<body>
+  <table border='1'>
+    <thead>
+    <tr> {{location}}</tr>
+     <tr>
+       <th>date</th>
+       <th>day temp</th>
+       <th>night temp</th>
+       <th>humidity</th>
+     </tr>
+    <tr>
+          {% for col in rows %}
+            <tr><th> {{col.1}}</th>
+            <th> {{col.2}}</th>
+            <th> {{col.3}}</th>
+            <th> {{col.4}}</th></tr>
+        {% endfor %}
+    </thead>
+    <tbody>
+
+    </tbody>
+</body>
+</html>

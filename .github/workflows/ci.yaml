@@ -1,0 +1,65 @@
+name: Python application
+
+on:
+  push:
+    branches: [ "main" ]
+env:
+  IMAGE_NAME: yp3yp3/weather
+  CD_REPO: yp3yp3/weather-CD 
+  USER_NAME: yp3yp3
+  EMAIL: yp3yp3@gmail.com
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+    	- name: Check out repository code
+        uses: actions/checkout@v4
+			
+			- name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.IMAGE_NAME }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          tags: ${{ env.IMAGE_NAME }}:latest, ${{ env.IMAGE_NAME }}:${{ github.run_number }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          push: true  
+      - name: save commit message for CD repo
+      	run: |
+      		commitMessage=$(git log -1 --pretty=format:%s", returnStdout: true)
+      		commitHash=$(git rev-parse --short HEAD)
+      		echo COMMIT=${{ github.run_number }}-${{ github.ref }}-${commitMessage}-${commitHash} >> $GITHUB_ENV
+	modifygit:
+#    needs: docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        name: changing the deployment of git repo
+        with:
+          repository: 'tanmaybhandge/App-Manifest-'
+          token: ${{ secrets.GIT_PASSWORD }}
+      - name: modify the new image
+        run: |
+        	git config --global user.name "${{ env.USER_NAME }}"
+          git config --global user.email "${{ env.EMAIL }}"
+					pwd
+          cat deployment.yaml
+          pwd
+          sed -i "s|image:.*\$|image: ${{ env.IMAGE_NAME }}:${{ github.run_number }}|g" deployment.yaml
+          git add -A
+          git commit -m "${{ env.COMMIT }}"
+          git push
+
+             

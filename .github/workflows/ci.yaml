@@ -10,7 +10,7 @@ env:
   EMAIL: yp3yp3@gmail.com
 jobs:
   docker:
-		runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
     
       - name: Check out repository code

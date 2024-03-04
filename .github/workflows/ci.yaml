@@ -42,10 +42,6 @@ jobs:
           commitMessage=$(git log -1 --pretty=format:%s)
           commitHash=$(git rev-parse --short HEAD)
           echo COMMIT=${{ github.run_number }}-${{ github.ref }}-${commitMessage}-${commitHash} >> $GITHUB_ENV
-  #modifygit:
-  #  needs: docker
-  #  runs-on: ubuntu-latest
-  #  steps:
       - uses: actions/checkout@v3
         name: changing the deployment of git repo
         with:
@@ -55,9 +51,6 @@ jobs:
         run: |
           git config --global user.name "${{ env.USER_NAME }}"
           git config --global user.email "${{ env.EMAIL }}"
-          pwd
-          cat deployment.yaml
-          pwd
           sed -i "s|image:.*\$|image: ${{ env.IMAGE_NAME }}:${{ github.run_number }}|g" deployment.yaml
           git add -A
           git commit -m "${{ env.COMMIT }}"

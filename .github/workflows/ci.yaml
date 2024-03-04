@@ -43,7 +43,7 @@ jobs:
           commitHash=$(git rev-parse --short HEAD)
           echo COMMIT=${{ github.run_number }}-${{ github.ref }}-${commitMessage}-${commitHash} >> $GITHUB_ENV
   modifygit:
-#    needs: docker
+    needs: docker
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

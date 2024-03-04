@@ -42,10 +42,10 @@ jobs:
           commitMessage=$(git log -1 --pretty=format:%s)
           commitHash=$(git rev-parse --short HEAD)
           echo COMMIT=${{ github.run_number }}-${{ github.ref }}-${commitMessage}-${commitHash} >> $GITHUB_ENV
-  modifygit:
-    needs: docker
-    runs-on: ubuntu-latest
-    steps:
+  #modifygit:
+  #  needs: docker
+  #  runs-on: ubuntu-latest
+  #  steps:
       - uses: actions/checkout@v3
         name: changing the deployment of git repo
         with:

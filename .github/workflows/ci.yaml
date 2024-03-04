@@ -39,7 +39,7 @@ jobs:
           push: true  
       - name: save commit message for CD repo
         run: |
-          commitMessage=$(git log -1 --pretty=format:%s", returnStdout: true)
+          commitMessage=$(git log -1 --pretty=format:%s, returnStdout: true)
           commitHash=$(git rev-parse --short HEAD)
           echo COMMIT=${{ github.run_number }}-${{ github.ref }}-${commitMessage}-${commitHash} >> $GITHUB_ENV
   modifygit:

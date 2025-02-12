@@ -76,7 +76,7 @@ jobs:
   update-production-on-main-change:
     needs: create-merge-request
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' &&  github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true
     steps:
       - name: Get image version from PR label
         id: get_version

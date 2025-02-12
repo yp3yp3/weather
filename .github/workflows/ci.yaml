@@ -11,7 +11,7 @@ env:
   USER_NAME: yp3yp3
   EMAIL: yp3yp3@gmail.com
 jobs:
-  docker:
+  build-and-deploy-stage:
     runs-on: ubuntu-latest
     steps:
     
@@ -59,19 +59,17 @@ jobs:
           git push
 
   create-merge-request:
-    needs: build-and-deploy-test
+    needs: build-and-deploy-stage
     runs-on: ubuntu-latest
     steps:
-      - name: Create pull request to main
-        id: create_pr
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: dev
-          base: main
-          title: "Merge dev to main"
-          body: "Merging tested version from dev to main. Image version: ${{ github.run_number }}"
-          labels: "image-version-${{ github.run_number }}"
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        
+      - name: Create pull request
+        run: |
+          gh pr create -B main -H dev --title "Merge dev to main" --body "Merging tested version from dev to main. Image version: ${{ github.run_number }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   update-production-on-main-change:
     needs: create-merge-request

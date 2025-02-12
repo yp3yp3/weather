@@ -3,8 +3,7 @@ name: Python application
 on:
   push:
     branches: [ "dev" ]
-  pull_request:
-    types: [closed]
+
 env:
   IMAGE_NAME: yp3yp3/weather
   CD_REPO: yp3yp3/weather-CD 
@@ -65,7 +64,25 @@ jobs:
         with:
           tags: ${{ env.IMAGE_NAME }}:latest, ${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
           annotations: ${{ steps.meta.outputs.annotations }}
-          push: true  
+          load: true 
+
+      - name: Start Container for Integration Testing
+        run: |
+          docker run -d -p 8081:8081 --name weather_app ${{ env.IMAGE_NAME }}:latest
+          sleep 5  # Wait for the app to start
+          
+      - name: Install  ChromeDriver & requirements
+        run: |
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+          sudo apt update
+          sudo apt install -y google-chrome-stable
+          pip install -r tests/integration/requirements.txt
+
+      - name: Run Integration Tests
+        run: |
+          pytest tests/integration --driver Chrome --headless
+          
       - name: save commit message for CD repo
         run: |
           commitMessage=$(git log -1 --pretty=format:%s)

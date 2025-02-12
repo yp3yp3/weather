@@ -62,6 +62,9 @@ jobs:
     needs: build-and-deploy-stage
     runs-on: ubuntu-latest
     steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        
       - name: Create pull request to main
         id: create_pr
         uses: peter-evans/create-pull-request@v5

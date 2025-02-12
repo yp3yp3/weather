@@ -65,12 +65,11 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v4
         
-      - name: create pull request
-        run: gh pr create -B main -H dev --title 'Merge dev to main' --body 'Merging tested version from dev to main. Image version: ${{ github.run_number }}'
+      - name: Create pull request
+        run: |
+          gh pr create -B main -H dev --title "Merge dev to main" --body "Merging tested version from dev to main. Image version: ${{ github.run_number }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
-
 
   update-production-on-main-change:
     needs: create-merge-request

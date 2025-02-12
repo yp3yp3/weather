@@ -2,7 +2,9 @@ name: Python application
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "dev" ]
+    pull_request:
+        types: [closed]
 env:
   IMAGE_NAME: yp3yp3/weather
   CD_REPO: yp3yp3/weather-CD 
@@ -43,17 +45,60 @@ jobs:
           commitHash=$(git rev-parse --short HEAD)
           echo COMMIT=${{ github.run_number }}-${{ github.ref }}-${commitMessage}-${commitHash} >> $GITHUB_ENV
       - uses: actions/checkout@v3
-        name: changing the deployment of git repo
+        name: Modify the deployment in the CD repo
         with:
           repository: ${{ env.CD_REPO }}
           token: ${{ secrets.GIT_PASSWORD }}
-      - name: modify the new image
+      - name: Update the test environment with new image
         run: |
           git config --global user.name "${{ env.USER_NAME }}"
           git config --global user.email "${{ env.EMAIL }}"
-          sed -i "s|image:.*\$|image: ${{ env.IMAGE_NAME }}:${{ github.run_number }}|g" deployment.yaml
+          sed -i "s|tag:.*\$|tag: ${{ github.run_number }}|g" values-test.yaml
           git add -A
-          git commit -m "${{ env.COMMIT }}"
+          git commit -m "Update Test environment to image version ${{ github.run_number }}"
           git push
 
-             
+  create-merge-request:
+    needs: build-and-deploy-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create pull request to main
+        id: create_pr
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: dev
+          base: main
+          title: "Merge dev to main"
+          body: "Merging tested version from dev to main. Image version: ${{ github.run_number }}"
+          labels: "image-version-${{ github.run_number }}"
+
+  update-production-on-main-change:
+    needs: create-merge-request
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    steps:
+      - name: Get image version from PR label
+        id: get_version
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          LABEL=$(gh pr view $PR_NUMBER --json labels -q '.labels[] | select(.name | startswith("image-version-")) | .name' || echo "")
+          VERSION=$(echo $LABEL | sed 's/image-version-//g')
+          echo "IMAGE_VERSION=$VERSION" >> $GITHUB_ENV
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/checkout@v3
+        name: Update production deployment in CD repo
+        with:
+          repository: ${{ env.CD_REPO }}
+          token: ${{ secrets.GIT_PASSWORD }}
+
+      - name: Update production environment with new image
+        run: |
+          git config --global user.name "${{ env.USER_NAME }}"
+          git config --global user.email "${{ env.EMAIL }}"
+          sed -i "s|tag:.*\$|tag: ${{ github.run_number }}|g" values-prod.yaml
+          git add -A
+          git commit -m "Update Production environment to image version ${{ env.IMAGE_VERSION }}"
+          git push             

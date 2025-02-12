@@ -36,7 +36,9 @@ jobs:
         run: |
           git config --global user.name "${{ env.USER_NAME }}"
           git config --global user.email "${{ env.EMAIL }}"
+          cat values-prod.yaml
           sed -i "s|tag:.*\$|tag: ${{ env.IMAGE_VERSION }}|g" values-prod.yaml
+          cat values-prod.yaml
           git add -A
           git commit -m "Update Production environment to image version ${{ env.IMAGE_VERSION }}"
           git push             

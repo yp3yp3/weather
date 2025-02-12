@@ -81,7 +81,7 @@ jobs:
 
       - name: Run Integration Tests
         run: |
-          python3  tests/integration/selenium_t.py --driver Chrome --headless
+          pytest tests/integration/selenium_t.py --driver Chrome --headless
 
       - name: Stop and Remove Container
         if: always()

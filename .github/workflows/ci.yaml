@@ -12,6 +12,7 @@ env:
   EMAIL: yp3yp3@gmail.com
 jobs:
   build-and-deploy-stage:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
     
@@ -59,6 +60,7 @@ jobs:
           git push
 
   create-merge-request:
+    if: github.event_name == 'push'
     needs: build-and-deploy-stage
     runs-on: ubuntu-latest
     steps:
@@ -74,7 +76,7 @@ jobs:
   update-production-on-main-change:
     needs: create-merge-request
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    if: github.event_name == 'pull_request' &&  github.event.pull_request.merged == true
     steps:
       - name: Get image version from PR label
         id: get_version

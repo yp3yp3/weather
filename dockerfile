@@ -1,7 +1,8 @@
-FROM python:3
+FROM python:3-slim
 WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 COPY /gunicorn /app
-RUN pip install flask requests gunicorn
 EXPOSE 8081
 CMD  gunicorn  wsgi:app
 

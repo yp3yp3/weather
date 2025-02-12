@@ -37,12 +37,6 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Run Unit Tests 
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install --upgrade pip
-          pip install -r tests/requirements-dev.txt
 
       - name: Run Unit Tests
         run: |

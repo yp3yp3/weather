@@ -1,4 +1,7 @@
 <body style="background-color: {{background}};">
+{% if env_mode == "test" %}
+    <h2>BUILD: {{ build_num }}</h2>
+{% endif %}
 <h1>Here is a form</h1>
 
 <form method="post">

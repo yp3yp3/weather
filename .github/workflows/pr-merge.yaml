@@ -1,0 +1,40 @@
+name: Python application
+
+on:
+  pull_request:
+    types: [closed]
+env:
+  IMAGE_NAME: yp3yp3/weather
+  CD_REPO: yp3yp3/weather-CD 
+  USER_NAME: yp3yp3
+  EMAIL: yp3yp3@gmail.com
+jobs:
+
+  update-production-on-main-change:
+    needs: create-merge-request
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get image version from PR label
+        id: get_version
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          LABEL=$(gh pr view $PR_NUMBER --json labels -q '.labels[] | select(.name | startswith("image-version-")) | .name' || echo "")
+          VERSION=$(echo $LABEL | sed 's/image-version-//g')
+          echo "IMAGE_VERSION=$VERSION" >> $GITHUB_ENV
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/checkout@v3
+        name: Update production deployment in CD repo
+        with:
+          repository: ${{ env.CD_REPO }}
+          token: ${{ secrets.GIT_PASSWORD }}
+
+      - name: Update production environment with new image
+        run: |
+          git config --global user.name "${{ env.USER_NAME }}"
+          git config --global user.email "${{ env.EMAIL }}"
+          sed -i "s|tag:.*\$|tag: ${{ env.IMAGE_VERSION }}|g" values-prod.yaml
+          git add -A
+          git commit -m "Update Production environment to image version ${{ env.IMAGE_VERSION }}"
+          git push             

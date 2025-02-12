@@ -81,7 +81,18 @@ jobs:
 
       - name: Run Integration Tests
         run: |
-          pytest tests/integration --driver Chrome --headless
+          python3  tests/integration/selenium_t.py --driver Chrome --headless
+
+      - name: Stop and Remove Container
+        if: always()
+        run: |
+          docker stop weather_app && docker rm weather_app
+
+      - name: Push Docker Image (Only if Tests Pass)
+        if: success()
+        run: |
+          docker push ${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
           
       - name: save commit message for CD repo
         run: |

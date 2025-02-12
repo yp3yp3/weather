@@ -68,7 +68,7 @@ jobs:
       - name: create pull request
         run: gh pr create -B main -H dev --title 'Merge dev to main' --body 'Merging tested version from dev to main. Image version: ${{ github.run_number }}'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
 
 

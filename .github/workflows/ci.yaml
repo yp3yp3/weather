@@ -3,8 +3,8 @@ name: Python application
 on:
   push:
     branches: [ "dev" ]
-    pull_request:
-        types: [closed]
+  pull_request:
+    types: [closed]
 env:
   IMAGE_NAME: yp3yp3/weather
   CD_REPO: yp3yp3/weather-CD 
@@ -96,7 +96,7 @@ jobs:
         run: |
           git config --global user.name "${{ env.USER_NAME }}"
           git config --global user.email "${{ env.EMAIL }}"
-          sed -i "s|tag:.*\$|tag: ${{ github.run_number }}|g" values-prod.yaml
+          sed -i "s|tag:.*\$|tag: ${{ env.IMAGE_VERSION }}|g" values-prod.yaml
           git add -A
           git commit -m "Update Production environment to image version ${{ env.IMAGE_VERSION }}"
           git push             

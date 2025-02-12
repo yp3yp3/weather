@@ -11,7 +11,7 @@ env:
   USER_NAME: yp3yp3
   EMAIL: yp3yp3@gmail.com
 jobs:
-  docker:
+  build-and-deploy-stage:
     runs-on: ubuntu-latest
     steps:
     
@@ -59,7 +59,7 @@ jobs:
           git push
 
   create-merge-request:
-    needs: build-and-deploy-test
+    needs: build-and-deploy-stage
     runs-on: ubuntu-latest
     steps:
       - name: Create pull request to main

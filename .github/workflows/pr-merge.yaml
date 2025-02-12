@@ -13,21 +13,6 @@ jobs:
   update-production-on-main-change:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository code
-        uses: actions/checkout@v4
-
-      - name: Get image version from PR label
-        id: get_version
-        run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          echo $PR_NUMBER
-          LABEL=$(gh pr view $PR_NUMBER --json labels -q '.labels[] | select(.name | startswith("image-version-")) | .name' || echo "")
-          echo $LABEL
-          VERSION=$(echo $LABEL | sed 's/image-version-//g')
-          echo $VERSION
-          echo "IMAGE_VERSION=$VERSION" >> $GITHUB_ENV
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/checkout@v3
         name: Update production deployment in CD repo
@@ -39,9 +24,10 @@ jobs:
         run: |
           git config --global user.name "${{ env.USER_NAME }}"
           git config --global user.email "${{ env.EMAIL }}"
-          cat values-prod.yaml
-          sed -i "s|tag:.*\$|tag: ${{ env.IMAGE_VERSION }}|g" values-prod.yaml
+          VERSION=$(grep 'tag:' values-test.yaml | awk '{print $2}')
+          echo "IMAGE_VERSION=$NEW_VERSION" >> $GITHUB_ENV      
+          sed -i "s|tag:.*\$|tag: $VERSION|g" values-prod.yaml
           cat values-prod.yaml
           git add -A
-          git commit -m "Update Production environment to image version ${{ env.IMAGE_VERSION }}"
+          git commit -m "Update Production environment to image version $VERSION"
           git push             

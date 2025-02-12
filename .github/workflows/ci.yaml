@@ -11,30 +11,24 @@ env:
   USER_NAME: yp3yp3
   EMAIL: yp3yp3@gmail.com
 jobs:
-  debug-event:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Print GitHub Event Context
-        run: |
-          echo "🔍 Debugging GitHub Actions Event Data:"
-          echo "--------------------------------------"
-          echo "Event Name: ${{ github.event_name }}"
-          echo "Event Action: ${{ github.event.action }}"
-          echo "Ref: ${{ github.ref }}"
-          echo "Base Ref: ${{ github.base_ref }}"
-          echo "Head Ref: ${{ github.head_ref }}"
-          echo "Merged: ${{ github.event.pull_request.merged }}"
-          echo "PR Number: ${{ github.event.pull_request.number }}"
-          echo "--------------------------------------"
-          
-          echo "📝 Full Event JSON:"
-          cat $GITHUB_EVENT_PATH
-
+  
   build-and-deploy-stage:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-    
+      - uses: actions/checkout@v3
+        name: Modify the deployment in the CD repo
+        with:
+          repository: ${{ env.CD_REPO }}
+          token: ${{ secrets.GIT_PASSWORD }}
+      
+      - name: Read current version from values-test.yaml
+        id: get_version
+        run: |
+          VERSION=$(grep 'tag:' values-test.yaml | awk '{print $2}')
+          NEW_VERSION=$((VERSION + 1))
+          echo "IMAGE_VERSION=$NEW_VERSION" >> $GITHUB_ENV          
+          
       - name: Check out repository code
         uses: actions/checkout@v4
 
@@ -56,14 +50,14 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          tags: ${{ env.IMAGE_NAME }}:latest, ${{ env.IMAGE_NAME }}:${{ github.run_number }}
+          tags: ${{ env.IMAGE_NAME }}:latest, ${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
           annotations: ${{ steps.meta.outputs.annotations }}
           push: true  
       - name: save commit message for CD repo
         run: |
           commitMessage=$(git log -1 --pretty=format:%s)
           commitHash=$(git rev-parse --short HEAD)
-          echo COMMIT=${{ github.run_number }}-${{ github.ref }}-${commitMessage}-${commitHash} >> $GITHUB_ENV
+          echo COMMIT=${{ env.IMAGE_VERSION }}-${{ github.ref }}-${commitMessage}-${commitHash} >> $GITHUB_ENV
       - uses: actions/checkout@v3
         name: Modify the deployment in the CD repo
         with:
@@ -73,9 +67,9 @@ jobs:
         run: |
           git config --global user.name "${{ env.USER_NAME }}"
           git config --global user.email "${{ env.EMAIL }}"
-          sed -i "s|tag:.*\$|tag: ${{ github.run_number }}|g" values-test.yaml
+          sed -i "s|tag:.*\$|tag: ${{ env.IMAGE_VERSION }}|g" values-test.yaml
           git add -A
-          git commit -m "Update Test environment to image version ${{ github.run_number }}"
+          git commit -m "Update Test environment to image version ${{ env.IMAGE_VERSION }}"
           git push
 
   create-merge-request:
@@ -88,36 +82,7 @@ jobs:
         
       - name: Create pull request
         run: |
-          gh pr create -B main -H dev --title "Merge dev to main" --body "Merging tested version from dev to main. Image version: ${{ github.run_number }}"
+          gh pr create -B main -H dev --title "Merge dev to main" --body "Merging tested version from dev to main. Image version: ${{ env.IMAGE_VERSION }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  update-production-on-main-change:
-    needs: create-merge-request
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
-    steps:
-      - name: Get image version from PR label
-        id: get_version
-        run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          LABEL=$(gh pr view $PR_NUMBER --json labels -q '.labels[] | select(.name | startswith("image-version-")) | .name' || echo "")
-          VERSION=$(echo $LABEL | sed 's/image-version-//g')
-          echo "IMAGE_VERSION=$VERSION" >> $GITHUB_ENV
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: actions/checkout@v3
-        name: Update production deployment in CD repo
-        with:
-          repository: ${{ env.CD_REPO }}
-          token: ${{ secrets.GIT_PASSWORD }}
-
-      - name: Update production environment with new image
-        run: |
-          git config --global user.name "${{ env.USER_NAME }}"
-          git config --global user.email "${{ env.EMAIL }}"
-          sed -i "s|tag:.*\$|tag: ${{ env.IMAGE_VERSION }}|g" values-prod.yaml
-          git add -A
-          git commit -m "Update Production environment to image version ${{ env.IMAGE_VERSION }}"
-          git push             

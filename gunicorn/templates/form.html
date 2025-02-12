@@ -9,7 +9,7 @@
 
     <button type="submit">submit</button>
 </form>
-{% if env_mode == "test" %}
+{% if env_mode == "prod" %}
     <small>BUILD: {{ build_num }}</small>
 {% endif %}
 </body>

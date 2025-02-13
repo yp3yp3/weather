@@ -24,8 +24,7 @@ jobs:
         run: |
           git config --global user.name "${{ env.USER_NAME }}"
           git config --global user.email "${{ env.EMAIL }}"
-          VERSION=$(grep 'tag:' values-test.yaml | awk '{print $2}')
-          echo "IMAGE_VERSION=$NEW_VERSION" >> $GITHUB_ENV      
+          VERSION=$(grep 'tag:' values-stage.yaml | awk '{print $2}')    
           sed -i "s|tag:.*\$|tag: $VERSION|g" values-prod.yaml
           cat values-prod.yaml
           git add -A

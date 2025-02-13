@@ -1,13 +1,13 @@
 import unittest
 import sys
 import argparse
+import chromedriver_autoinstaller  # Automatically installs ChromeDriver
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
 
 # Define the Flask app URL
 FLASK_URL = "http://127.0.0.1:8001"  # Local Flask instance
@@ -25,6 +25,9 @@ sys.argv = [sys.argv[0]] + unknown
 class AppSeleniumTest(unittest.TestCase):
     def setUp(self):
         """Initialize WebDriver with options."""
+        # Automatically install the correct version of ChromeDriver
+        chromedriver_autoinstaller.install()
+
         chrome_options = Options()
 
         # Enable headless mode if passed via CLI
@@ -38,7 +41,7 @@ class AppSeleniumTest(unittest.TestCase):
         for extension in args.extensions:
             chrome_options.add_extension(extension)
 
-        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+        self.driver = webdriver.Chrome(options=chrome_options)
         self.driver.implicitly_wait(5)  # Implicit wait for elements to load
 
     def tearDown(self):

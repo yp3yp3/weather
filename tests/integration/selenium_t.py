@@ -1,4 +1,5 @@
 import unittest
+import sys
 import argparse
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -8,19 +9,22 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
-# Define the Flask app URL (update according to your setup)
-FLASK_URL = "http://127.0.0.1:8081"  # Local Flask instance
+# Define the Flask app URL
+FLASK_URL = "http://127.0.0.1:8001"  # Local Flask instance
 # FLASK_URL = "http://app:5000"  # If running in Docker Compose
 
-# CLI Argument Parser
-parser = argparse.ArgumentParser(description="Run Selenium tests with options.")
-parser.add_argument("--headless", action="store_true", help="Run Chrome in headless mode")
+# Parse CLI arguments **before** unittest starts
+parser = argparse.ArgumentParser()
+parser.add_argument("--headless", action="store_true", help="Run tests in headless mode")
 parser.add_argument("--extensions", nargs="+", help="List of Chrome extensions to load", default=[])
 args, unknown = parser.parse_known_args()
 
+# Remove unknown args to prevent unittest errors
+sys.argv = [sys.argv[0]] + unknown
+
 class AppSeleniumTest(unittest.TestCase):
     def setUp(self):
-        """Initialize WebDriver using webdriver-manager with options."""
+        """Initialize WebDriver with options."""
         chrome_options = Options()
 
         # Enable headless mode if passed via CLI

@@ -10,7 +10,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 # Define the Flask app URL
-FLASK_URL = "http://127.0.0.1:8001"  # Local Flask instance
+FLASK_URL = "http://127.0.0.1:8081"  # Local Flask instance
 # FLASK_URL = "http://app:5000"  # If running in Docker Compose
 
 # Parse CLI arguments **before** unittest starts

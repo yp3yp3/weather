@@ -102,13 +102,13 @@ jobs:
         with:
           repository: ${{ env.CD_REPO }}
           token: ${{ secrets.GIT_PASSWORD }}
-      - name: Update the test environment with new image
+      - name: Update the stage environment with new image
         run: |
           git config --global user.name "${{ env.USER_NAME }}"
           git config --global user.email "${{ env.EMAIL }}"
           sed -i "s|tag:.*\$|tag: ${{ env.IMAGE_VERSION }}|g" values-stage.yaml
           git add -A
-          git commit -m "Update Test environment to image version ${{ env.IMAGE_VERSION }}"
+          git commit -m "Update stage environment to image version ${{ env.IMAGE_VERSION }}"
           git push
 
   create-merge-request:
